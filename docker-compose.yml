@@ -12,5 +12,23 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
 
+  flask:
+    build: ./backend/flask_app
+    container_name: flask_container
+    restart: always
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+
+  fastapi:
+    build: ./backend/fastapi_app
+    container_name: fastapi_container
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
 volumes:
   pg_data:

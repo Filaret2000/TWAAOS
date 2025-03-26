@@ -4,3 +4,13 @@ docker exec -it postgres_container psql -U admin -d testdb
 
 \q pentru iesire
 
+  frontend:
+    build: ./frontend
+    container_name: frontend_container
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - flask
+      - fastapi
+
