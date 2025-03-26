@@ -1,0 +1,6 @@
+verificare postgres:
+
+docker exec -it postgres_container psql -U admin -d testdb
+
+\q pentru iesire
+
