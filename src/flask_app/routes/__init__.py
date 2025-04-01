@@ -15,6 +15,10 @@ api_bp.register_blueprint(upload_bp, url_prefix='/upload')
 api_bp.register_blueprint(schedule_bp, url_prefix='/schedules')
 api_bp.register_blueprint(notification_bp, url_prefix='/notifications')
 
+# Funcție pentru înregistrarea tuturor rutelor în aplicația Flask
+def register_routes(app):
+    app.register_blueprint(api_bp)
+
 # Exportăm toate blueprint-urile pentru a fi utilizate în alte module
 __all__ = [
     'api_bp',
@@ -22,5 +26,6 @@ __all__ = [
     'export_bp',
     'upload_bp',
     'schedule_bp',
-    'notification_bp'
+    'notification_bp',
+    'register_routes'
 ]

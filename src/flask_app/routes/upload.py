@@ -5,10 +5,10 @@ from sqlalchemy.exc import SQLAlchemyError
 import os
 from werkzeug.utils import secure_filename
 
-from common.models import User
-from common.services import ExcelService
-from flask_app.utils.db import get_db_session
-from flask_app.utils.decorators import role_required
+from src.common.models import User
+from src.common.services import ExcelService
+from src.flask_app.utils.db import get_db_session
+from src.flask_app.utils.decorators import role_required
 
 # Creăm blueprint-ul pentru upload
 upload_bp = Blueprint('upload', __name__)

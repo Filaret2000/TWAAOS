@@ -1,8 +1,8 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_swagger_ui import get_swaggerui_blueprint
@@ -21,15 +21,26 @@ login_manager = LoginManager(app)
 jwt = JWTManager(app)
 CORS(app)
 
+# Configurare user_loader pentru Flask-Login
+@login_manager.user_loader
+def load_user(user_id):
+    from src.common.models import User
+    return User.query.get(int(user_id))
+
 # Configurare Swagger UI
-SWAGGER_URL = '/api/docs/flask'
-API_URL = '/api/swagger.json'
+SWAGGER_URL = '/api/docs'  # URL pentru interfața Swagger UI
+API_URL = '/api/swagger.json'  # URL pentru fișierul swagger.json
 
 swaggerui_blueprint = get_swaggerui_blueprint(
     SWAGGER_URL,
     API_URL,
     config={
-        'app_name': "Sistem Planificare Examene FIESC - Flask API"
+        'app_name': "Sistem Planificare Examene FIESC - Flask API",
+        'dom_id': '#swagger-ui',
+        'deepLinking': True,
+        'layout': 'BaseLayout',
+        'showExtensions': True,
+        'showCommonExtensions': True
     }
 )
 
@@ -38,7 +49,8 @@ app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 # Încărcare swagger.json
 @app.route('/api/swagger.json')
 def swagger_spec():
-    with open(os.path.join(os.path.dirname(__file__), 'swagger.json'), 'r') as f:
+    """Returnează fișierul swagger.json"""
+    with open(os.path.join(os.path.dirname(__file__), 'swagger.json'), 'r', encoding='utf-8') as f:
         return jsonify(json.load(f))
 
 # Inițializare bază de date
