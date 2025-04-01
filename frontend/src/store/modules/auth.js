@@ -45,7 +45,7 @@ const mutations = {
 
 const actions = {
   // Autentificare cu Google OAuth
-  async login({ commit, dispatch }, googleToken) {
+  async login({ commit }, googleToken) {
     try {
       commit('SET_LOADING', true)
       commit('CLEAR_ERROR')

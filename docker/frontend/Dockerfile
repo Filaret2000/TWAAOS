@@ -6,6 +6,11 @@ WORKDIR /app
 COPY frontend/package*.json ./
 RUN npm install
 
+# Copierea fișierelor de configurare
+COPY frontend/.eslintrc.js ./
+COPY frontend/babel.config.js ./
+COPY frontend/vue.config.js ./
+
 # Copierea codului sursă
 COPY frontend/ .
 

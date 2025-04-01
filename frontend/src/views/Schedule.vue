@@ -214,7 +214,7 @@
               v-tooltip.top="'Editează'"
             />
             <Button 
-              v-if="canDeleteSchedule(slotProps.data)"
+              v-if="canDeleteSchedule()"
               icon="pi pi-trash" 
               class="p-button-rounded p-button-text p-button-sm p-button-danger"
               @click="confirmDeleteSchedule(slotProps.data)"
@@ -356,7 +356,7 @@ export default {
     }
     
     // Funcție pentru verificarea permisiunii de ștergere a unei planificări
-    const canDeleteSchedule = (schedule) => {
+    const canDeleteSchedule = () => {
       if (!user.value) return false
       
       // Doar administratorii și secretariatul pot șterge planificări

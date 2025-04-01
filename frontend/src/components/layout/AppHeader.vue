@@ -3,7 +3,7 @@
     <Menubar :model="items" class="border-noround">
       <template #start>
         <div class="flex align-items-center">
-          <img src="@/assets/logo.png" alt="Logo FIESC" height="40" class="mr-2" />
+          <img src="@/assets/logo.svg" alt="Logo FIESC" height="40" class="mr-2" />
           <h1 class="text-xl font-bold">Planificare Examene FIESC</h1>
         </div>
       </template>

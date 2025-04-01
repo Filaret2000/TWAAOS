@@ -2,7 +2,7 @@
   <div class="login-container">
     <div class="login-card">
       <div class="login-header text-center">
-        <img src="@/assets/logo.png" alt="Logo FIESC" height="80" class="mb-3" />
+        <img src="@/assets/logo.svg" alt="Logo FIESC" height="80" class="mb-3" />
         <h1 class="text-3xl font-bold mb-2">Planificare Examene</h1>
         <h2 class="text-xl text-color-secondary mb-4">Facultatea de Inginerie Electrică și Știința Calculatoarelor</h2>
       </div>
@@ -78,10 +78,19 @@ export default {
     
     // Inițializăm Google Sign-In API la încărcarea componentei
     onMounted(() => {
+      // Verificăm dacă avem un ID de client Google configurat
+      const googleClientId = process.env.VUE_APP_GOOGLE_CLIENT_ID || ''
+      
+      // Dacă nu avem un ID de client Google configurat, nu încărcăm API-ul Google
+      if (googleClientId === '' || googleClientId === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
+        console.warn('Google Client ID nu este configurat. Autentificarea Google nu va funcționa.')
+        return
+      }
+      
       // Verificăm dacă API-ul Google este deja încărcat
       if (window.gapi && window.gapi.auth2) {
         window.gapi.auth2.init({
-          client_id: process.env.VUE_APP_GOOGLE_CLIENT_ID
+          client_id: googleClientId
         })
       } else {
         // Încărcăm API-ul Google
@@ -92,7 +101,7 @@ export default {
         script.onload = () => {
           window.gapi.load('auth2', () => {
             window.gapi.auth2.init({
-              client_id: process.env.VUE_APP_GOOGLE_CLIENT_ID
+              client_id: googleClientId
             })
           })
         }

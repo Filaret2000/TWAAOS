@@ -189,7 +189,7 @@ const actions = {
   },
   
   // Importă utilizatori din fișier Excel (doar pentru administratori)
-  async importUsers({ commit, rootState }, formData) {
+  async importUsers({ commit, dispatch, rootState }, formData) {
     try {
       commit('SET_LOADING', true)
       commit('CLEAR_ERROR')
