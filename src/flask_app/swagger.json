@@ -1,0 +1,939 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Sistem Planificare Examene API (Flask)",
+    "description": "API pentru sistemul de planificare examene FIESC implementat în Flask",
+    "version": "1.0.0",
+    "contact": {
+      "email": "planificare@fiesc.usv.ro"
+    }
+  },
+  "basePath": "/api",
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+    }
+  },
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Operații de autentificare și gestionare utilizatori"
+    },
+    {
+      "name": "schedules",
+      "description": "Operații de planificare examene"
+    },
+    {
+      "name": "export",
+      "description": "Operații de export date"
+    },
+    {
+      "name": "upload",
+      "description": "Operații de încărcare fișiere"
+    },
+    {
+      "name": "notifications",
+      "description": "Operații de gestionare notificări"
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Autentificare cu Google OAuth",
+        "description": "Endpoint pentru autentificare cu Google OAuth",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Token Google OAuth",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "token"
+              ],
+              "properties": {
+                "token": {
+                  "type": "string",
+                  "example": "google_oauth_token"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Autentificare reușită",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "access_token": {
+                  "type": "string",
+                  "example": "jwt_token"
+                },
+                "token_type": {
+                  "type": "string",
+                  "example": "bearer"
+                },
+                "expires_in": {
+                  "type": "integer",
+                  "example": 3600
+                },
+                "user": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 123
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "user@usv.ro"
+                    },
+                    "role": {
+                      "type": "string",
+                      "example": "SEC"
+                    },
+                    "firstName": {
+                      "type": "string",
+                      "example": "Nume"
+                    },
+                    "lastName": {
+                      "type": "string",
+                      "example": "Prenume"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Token Google OAuth lipsă"
+          },
+          "401": {
+            "description": "Token Google OAuth invalid sau email invalid pentru aplicație"
+          },
+          "500": {
+            "description": "Eroare la crearea utilizatorului"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Obținerea utilizatorului curent",
+        "description": "Endpoint pentru obținerea utilizatorului curent",
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Utilizator obținut cu succes",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "example": 123
+                },
+                "email": {
+                  "type": "string",
+                  "example": "user@usv.ro"
+                },
+                "role": {
+                  "type": "string",
+                  "example": "SEC"
+                },
+                "firstName": {
+                  "type": "string",
+                  "example": "Nume"
+                },
+                "lastName": {
+                  "type": "string",
+                  "example": "Prenume"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Utilizator neautentificat"
+          },
+          "404": {
+            "description": "Utilizator negăsit"
+          },
+          "500": {
+            "description": "Eroare la obținerea utilizatorului"
+          }
+        }
+      }
+    },
+    "/schedules": {
+      "get": {
+        "tags": [
+          "schedules"
+        ],
+        "summary": "Obținerea planificărilor",
+        "description": "Endpoint pentru obținerea planificărilor",
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "query",
+            "description": "ID-ul grupei",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "teacher_id",
+            "in": "query",
+            "description": "ID-ul cadrului didactic",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "Data de început pentru filtrare (format: YYYY-MM-DD)",
+            "required": false,
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "Data de sfârșit pentru filtrare (format: YYYY-MM-DD)",
+            "required": false,
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Statusul planificării",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "proposed",
+              "approved",
+              "rejected"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Planificări obținute cu succes",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Schedule"
+              }
+            }
+          },
+          "401": {
+            "description": "Utilizator neautentificat"
+          },
+          "500": {
+            "description": "Eroare la obținerea planificărilor"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "schedules"
+        ],
+        "summary": "Crearea unei planificări",
+        "description": "Endpoint pentru crearea unei planificări",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Datele planificării",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ScheduleCreate"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Planificare creată cu succes",
+            "schema": {
+              "$ref": "#/definitions/Schedule"
+            }
+          },
+          "400": {
+            "description": "Date lipsă sau format dată/timp invalid"
+          },
+          "401": {
+            "description": "Utilizator neautentificat"
+          },
+          "403": {
+            "description": "Utilizator fără permisiuni"
+          },
+          "500": {
+            "description": "Eroare la crearea planificării"
+          }
+        }
+      }
+    },
+    "/schedules/{schedule_id}": {
+      "get": {
+        "tags": [
+          "schedules"
+        ],
+        "summary": "Obținerea unei planificări după ID",
+        "description": "Endpoint pentru obținerea unei planificări după ID",
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "description": "ID-ul planificării",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Planificare obținută cu succes",
+            "schema": {
+              "$ref": "#/definitions/Schedule"
+            }
+          },
+          "401": {
+            "description": "Utilizator neautentificat"
+          },
+          "404": {
+            "description": "Planificare negăsită"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "schedules"
+        ],
+        "summary": "Actualizarea unei planificări",
+        "description": "Endpoint pentru actualizarea unei planificări",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "description": "ID-ul planificării",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Datele planificării",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ScheduleUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Planificare actualizată cu succes",
+            "schema": {
+              "$ref": "#/definitions/Schedule"
+            }
+          },
+          "400": {
+            "description": "Date lipsă sau format dată/timp invalid"
+          },
+          "401": {
+            "description": "Utilizator neautentificat"
+          },
+          "403": {
+            "description": "Utilizator fără permisiuni"
+          },
+          "404": {
+            "description": "Planificare negăsită sau eroare la actualizare"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "schedules"
+        ],
+        "summary": "Ștergerea unei planificări",
+        "description": "Endpoint pentru ștergerea unei planificări",
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "description": "ID-ul planificării",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Planificare ștearsă cu succes",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Planificare ștearsă cu succes"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Utilizator neautentificat"
+          },
+          "403": {
+            "description": "Utilizator fără permisiuni"
+          },
+          "404": {
+            "description": "Planificare negăsită sau eroare la ștergere"
+          }
+        }
+      }
+    },
+    "/export/excel": {
+      "get": {
+        "tags": [
+          "export"
+        ],
+        "summary": "Export planificări în format Excel",
+        "description": "Endpoint pentru exportul planificărilor în format Excel",
+        "produces": [
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "query",
+            "description": "ID-ul grupei",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "teacher_id",
+            "in": "query",
+            "description": "ID-ul cadrului didactic",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "Data de început pentru filtrare (format: YYYY-MM-DD)",
+            "required": false,
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "Data de sfârșit pentru filtrare (format: YYYY-MM-DD)",
+            "required": false,
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fișier Excel generat cu succes"
+          },
+          "401": {
+            "description": "Utilizator neautentificat"
+          },
+          "403": {
+            "description": "Utilizator fără permisiuni"
+          },
+          "500": {
+            "description": "Eroare la generarea fișierului Excel"
+          }
+        }
+      }
+    },
+    "/export/pdf": {
+      "get": {
+        "tags": [
+          "export"
+        ],
+        "summary": "Export planificări în format PDF",
+        "description": "Endpoint pentru exportul planificărilor în format PDF",
+        "produces": [
+          "application/pdf"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "query",
+            "description": "ID-ul grupei",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "teacher_id",
+            "in": "query",
+            "description": "ID-ul cadrului didactic",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "Data de început pentru filtrare (format: YYYY-MM-DD)",
+            "required": false,
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "Data de sfârșit pentru filtrare (format: YYYY-MM-DD)",
+            "required": false,
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fișier PDF generat cu succes"
+          },
+          "401": {
+            "description": "Utilizator neautentificat"
+          },
+          "403": {
+            "description": "Utilizator fără permisiuni"
+          },
+          "500": {
+            "description": "Eroare la generarea fișierului PDF"
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Obținerea notificărilor utilizatorului curent",
+        "description": "Endpoint pentru obținerea notificărilor utilizatorului curent",
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "unread_only",
+            "in": "query",
+            "description": "Dacă se returnează doar notificările necitite",
+            "required": false,
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numărul paginii",
+            "required": false,
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Numărul de notificări per pagină",
+            "required": false,
+            "type": "integer",
+            "default": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notificări obținute cu succes",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "notifications": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Notification"
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "page": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "per_page": {
+                      "type": "integer",
+                      "example": 10
+                    },
+                    "total_pages": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "total_items": {
+                      "type": "integer",
+                      "example": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Utilizator neautentificat"
+          },
+          "500": {
+            "description": "Eroare la obținerea notificărilor"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Subject": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "name": {
+          "type": "string",
+          "example": "Programare Web"
+        },
+        "acronym": {
+          "type": "string",
+          "example": "PW"
+        }
+      }
+    },
+    "Teacher": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "firstName": {
+          "type": "string",
+          "example": "Nume"
+        },
+        "lastName": {
+          "type": "string",
+          "example": "Prenume"
+        },
+        "email": {
+          "type": "string",
+          "example": "email@usv.ro"
+        }
+      }
+    },
+    "Group": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "name": {
+          "type": "string",
+          "example": "3A4"
+        },
+        "year": {
+          "type": "integer",
+          "example": 3
+        },
+        "specialization": {
+          "type": "string",
+          "example": "Calculatoare"
+        }
+      }
+    },
+    "Room": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "name": {
+          "type": "string",
+          "example": "C201"
+        },
+        "capacity": {
+          "type": "integer",
+          "example": 30
+        },
+        "building": {
+          "type": "string",
+          "example": "C"
+        }
+      }
+    },
+    "Schedule": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "subject": {
+          "$ref": "#/definitions/Subject"
+        },
+        "teacher": {
+          "$ref": "#/definitions/Teacher"
+        },
+        "group": {
+          "$ref": "#/definitions/Group"
+        },
+        "room": {
+          "$ref": "#/definitions/Room"
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "example": "2023-06-15"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "time",
+          "example": "10:00"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "time",
+          "example": "12:00"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "proposed",
+            "approved",
+            "rejected"
+          ],
+          "example": "approved"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-05-01T12:00:00Z"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-05-02T14:30:00Z"
+        }
+      }
+    },
+    "ScheduleCreate": {
+      "type": "object",
+      "required": [
+        "subjectId",
+        "teacherId",
+        "groupId",
+        "date",
+        "startTime",
+        "endTime"
+      ],
+      "properties": {
+        "subjectId": {
+          "type": "integer",
+          "example": 1
+        },
+        "teacherId": {
+          "type": "integer",
+          "example": 1
+        },
+        "groupId": {
+          "type": "integer",
+          "example": 1
+        },
+        "roomId": {
+          "type": "integer",
+          "example": 1
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "example": "2023-06-15"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "time",
+          "example": "10:00"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "time",
+          "example": "12:00"
+        }
+      }
+    },
+    "ScheduleUpdate": {
+      "type": "object",
+      "properties": {
+        "subjectId": {
+          "type": "integer",
+          "example": 1
+        },
+        "teacherId": {
+          "type": "integer",
+          "example": 1
+        },
+        "groupId": {
+          "type": "integer",
+          "example": 1
+        },
+        "roomId": {
+          "type": "integer",
+          "example": 1
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "example": "2023-06-15"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "time",
+          "example": "10:00"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "time",
+          "example": "12:00"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "proposed",
+            "approved",
+            "rejected"
+          ],
+          "example": "approved"
+        }
+      }
+    },
+    "Notification": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "title": {
+          "type": "string",
+          "example": "Planificare nouă"
+        },
+        "message": {
+          "type": "string",
+          "example": "A fost adăugată o planificare nouă pentru grupa 3A4"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "system",
+            "schedule",
+            "deadline",
+            "info"
+          ],
+          "example": "schedule"
+        },
+        "read": {
+          "type": "boolean",
+          "example": false
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-05-01T12:00:00Z"
+        }
+      }
+    }
+  }
+}

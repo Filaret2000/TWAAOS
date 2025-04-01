@@ -1,0 +1,46 @@
+# Framework principal
+fastapi==0.95.1
+uvicorn==0.22.0
+starlette==0.26.1
+
+# Extensii FastAPI
+pydantic==2.0.3
+python-multipart==0.0.6
+python-jose==3.3.0
+passlib==1.7.4
+fastapi-jwt-auth==0.5.0
+fastapi-pagination==0.12.4
+fastapi-utils==0.2.1
+fastapi-sqlalchemy==0.2.1
+fastapi-mail==1.2.8
+
+# Bază de date
+SQLAlchemy==2.0.12
+psycopg2-binary==2.9.6
+alembic==1.10.4
+sqlmodel==0.0.8
+
+# Utilitare
+python-dotenv==1.0.0
+requests==2.28.2
+pandas==2.0.1
+openpyxl==3.1.2
+sendgrid==6.9.7
+email-validator==2.0.0
+
+# Autentificare
+authlib==1.2.0
+httpx==0.24.0
+
+# Securitate
+cryptography==40.0.2
+bcrypt==4.0.1
+
+# Serializare/Deserializare
+orjson==3.8.12
+
+# Testare
+pytest==7.3.1
+pytest-asyncio==0.21.0
+coverage==7.2.5
+httpx==0.24.0

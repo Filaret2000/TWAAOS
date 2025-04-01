@@ -1,0 +1,37 @@
+# Dependențe comune
+SQLAlchemy==1.4.46
+psycopg2-binary==2.9.5
+pydantic==1.10.7
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+email-validator==2.0.0.post2
+requests==2.28.2
+python-dotenv==1.0.0
+sendgrid==6.10.0
+openpyxl==3.1.2
+xlsxwriter==3.1.0
+reportlab==3.6.12
+Pillow==9.5.0
+pandas==2.0.0
+alembic==1.10.4
+
+# Dependențe Flask
+Flask==2.2.3
+Flask-SQLAlchemy==3.0.3
+Flask-JWT-Extended==4.4.4
+Flask-Cors==3.0.10
+Flask-Migrate==4.0.4
+Flask-Login==0.6.2
+flask-swagger-ui==4.11.1
+gunicorn==20.1.0
+Werkzeug==2.2.3
+
+# Dependențe FastAPI
+fastapi==0.95.1
+uvicorn==0.22.0
+starlette==0.26.1
+httpx==0.24.0
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.6
+email-validator==2.0.0.post2

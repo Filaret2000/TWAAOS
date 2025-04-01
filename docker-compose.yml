@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # Serviciul pentru aplicația Flask
+  backend-flask:
+    build:
+      context: .
+      dockerfile: docker/flask/Dockerfile
+    container_name: fiesc-flask
+    restart: always
+    volumes:
+      - ./src:/app/src
+      - ./requirements.txt:/app/requirements.txt
+    environment:
+      - FLASK_APP=src/flask_app/app.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - DATABASE_URL=postgresql://fiesc_admin:secure_password@db:5432/exam_scheduling
+      - SECRET_KEY=${APP_SECRET_KEY}
+      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
+      - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM}
+    depends_on:
+      - db
+    networks:
+      - fiesc-network
+    command: flask run --host=0.0.0.0 --port=5000
+    ports:
+      - "5000:5000"
+
+  # Serviciul pentru aplicația FastAPI
+  backend-fastapi:
+    build:
+      context: .
+      dockerfile: docker/fastapi/Dockerfile
+    container_name: fiesc-fastapi
+    restart: always
+    volumes:
+      - ./src:/app/src
+      - ./requirements.txt:/app/requirements.txt
+    environment:
+      - DATABASE_URL=postgresql://fiesc_admin:secure_password@db:5432/exam_scheduling
+      - SECRET_KEY=${APP_SECRET_KEY}
+      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
+      - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM}
+    depends_on:
+      - db
+    networks:
+      - fiesc-network
+    command: uvicorn src.fastapi_app.main:app --host=0.0.0.0 --port=8000 --reload
+    ports:
+      - "8000:8000"
+
+  # Serviciul pentru frontend Vue.js
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    container_name: fiesc-frontend
+    restart: always
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "8080:8080"
+    environment:
+      - VUE_APP_API_URL=http://localhost:8000/api
+      - VUE_APP_FLASK_API_URL=http://localhost:5000/api
+    networks:
+      - fiesc-network
+    command: npm run serve
+
+  # Serviciul pentru baza de date PostgreSQL
+  db:
+    image: postgres:14-alpine
+    container_name: fiesc-db
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=fiesc_admin
+      - POSTGRES_PASSWORD=secure_password
+      - POSTGRES_DB=exam_scheduling
+    ports:
+      - "5432:5432"
+    networks:
+      - fiesc-network
+
+  # Serviciul pentru Nginx (proxy invers)
+  nginx:
+    image: nginx:alpine
+    container_name: fiesc-nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - backend-flask
+      - backend-fastapi
+      - frontend
+    networks:
+      - fiesc-network
+
+networks:
+  fiesc-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
