@@ -15,26 +15,42 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/login', methods=['POST'])
 def login():
     """
-    Endpoint pentru autentificare cu Google OAuth
+    Endpoint pentru autentificare cu Google OAuth.
     
-    Request:
-    {
-        "token": "google_oauth_token"
-    }
+    Autentifică utilizatorul folosind un token Google OAuth. Dacă utilizatorul nu există
+    în baza de date și are un email valid (@usv.ro sau @student.usv.ro), va fi creat automat
+    cu rolul corespunzător (CD pentru profesori, SG pentru studenți).
     
-    Response:
-    {
-        "access_token": "jwt_token",
-        "token_type": "bearer",
-        "expires_in": 3600,
-        "user": {
-            "id": 123,
-            "email": "user@usv.ro",
-            "role": "SEC",
-            "firstName": "Nume",
-            "lastName": "Prenume"
+    Args:
+        None (primește datele din corpul cererii JSON)
+    
+    Request Body:
+        {
+            "token": "google_oauth_token"
         }
-    }
+    
+    Returns:
+        JSON: Un obiect JSON conținând token-ul de acces JWT, tipul token-ului,
+        timpul de expirare în secunde și informații despre utilizator.
+        
+    Response:
+        {
+            "access_token": "jwt_token",
+            "token_type": "bearer",
+            "expires_in": 3600,
+            "user": {
+                "id": 123,
+                "email": "user@usv.ro",
+                "role": "SEC",
+                "firstName": "Nume",
+                "lastName": "Prenume"
+            }
+        }
+    
+    Raises:
+        400: Dacă token-ul Google OAuth lipsește din cerere
+        401: Dacă token-ul Google OAuth este invalid sau email-ul nu este valid pentru aplicație
+        500: Dacă apare o eroare la crearea utilizatorului
     """
     # Obținem token-ul Google OAuth din request
     data = request.get_json()
@@ -105,16 +121,30 @@ def login():
 @jwt_required()
 def get_current_user():
     """
-    Endpoint pentru obținerea utilizatorului curent
+    Endpoint pentru obținerea utilizatorului curent.
     
+    Returnează informațiile despre utilizatorul autentificat curent,
+    pe baza token-ului JWT furnizat în header-ul de autorizare.
+    
+    Args:
+        None (identificarea utilizatorului se face prin token-ul JWT)
+    
+    Returns:
+        JSON: Un obiect JSON conținând informații despre utilizatorul curent.
+        
     Response:
-    {
-        "id": 123,
-        "email": "user@usv.ro",
-        "role": "SEC",
-        "firstName": "Nume",
-        "lastName": "Prenume"
-    }
+        {
+            "id": 123,
+            "email": "user@usv.ro",
+            "role": "SEC",
+            "firstName": "Nume",
+            "lastName": "Prenume"
+        }
+    
+    Raises:
+        401: Dacă token-ul JWT lipsește sau este invalid (gestionat de decorator-ul jwt_required)
+        404: Dacă utilizatorul nu este găsit în baza de date
+        500: Dacă apare o eroare la interogarea bazei de date
     """
     # Obținem ID-ul utilizatorului din token
     user_id = get_jwt_identity()
@@ -144,18 +174,33 @@ def get_current_user():
 @role_required('ADM')
 def get_users():
     """
-    Endpoint pentru obținerea tuturor utilizatorilor (doar pentru administrator)
+    Endpoint pentru obținerea tuturor utilizatorilor (doar pentru administrator).
     
+    Returnează o listă cu toți utilizatorii din sistem. Acest endpoint este
+    accesibil doar pentru utilizatorii cu rol de administrator (ADM).
+    
+    Args:
+        None
+    
+    Returns:
+        JSON: O listă de obiecte JSON, fiecare conținând informații despre un utilizator.
+        
     Response:
-    [
-        {
-            "id": 123,
-            "email": "user@usv.ro",
-            "role": "SEC",
-            "firstName": "Nume",
-            "lastName": "Prenume"
-        }
-    ]
+        [
+            {
+                "id": 123,
+                "email": "user@usv.ro",
+                "role": "SEC",
+                "firstName": "Nume",
+                "lastName": "Prenume"
+            },
+            ...
+        ]
+    
+    Raises:
+        401: Dacă token-ul JWT lipsește sau este invalid (gestionat de decorator-ul jwt_required)
+        403: Dacă utilizatorul nu are rol de administrator (gestionat de decorator-ul role_required)
+        500: Dacă apare o eroare la interogarea bazei de date
     """
     # Obținem toți utilizatorii din baza de date
     db_session = get_db_session()
@@ -179,25 +224,41 @@ def get_users():
 @role_required('ADM')
 def create_user():
     """
-    Endpoint pentru crearea unui utilizator nou (doar pentru administrator)
+    Endpoint pentru crearea unui utilizator nou (doar pentru administrator).
     
-    Request:
-    {
-        "email": "user@usv.ro",
-        "firstName": "Nume",
-        "lastName": "Prenume",
-        "role": "SEC",
-        "password": "parola" (opțional, doar pentru administrator)
-    }
+    Creează un utilizator nou în sistem. Acest endpoint este accesibil
+    doar pentru utilizatorii cu rol de administrator (ADM).
     
+    Args:
+        None (primește datele din corpul cererii JSON)
+    
+    Request Body:
+        {
+            "email": "user@usv.ro",
+            "firstName": "Nume",
+            "lastName": "Prenume",
+            "role": "SEC",
+            "password": "parola" (opțional, doar pentru administrator)
+        }
+    
+    Returns:
+        JSON: Un obiect JSON conținând informații despre utilizatorul creat.
+        
     Response:
-    {
-        "id": 123,
-        "email": "user@usv.ro",
-        "role": "SEC",
-        "firstName": "Nume",
-        "lastName": "Prenume"
-    }
+        {
+            "id": 123,
+            "email": "user@usv.ro",
+            "role": "SEC",
+            "firstName": "Nume",
+            "lastName": "Prenume"
+        }
+    
+    Raises:
+        400: Dacă datele furnizate sunt invalide sau incomplete
+        401: Dacă token-ul JWT lipsește sau este invalid (gestionat de decorator-ul jwt_required)
+        403: Dacă utilizatorul nu are rol de administrator (gestionat de decorator-ul role_required)
+        409: Dacă există deja un utilizator cu același email
+        500: Dacă apare o eroare la crearea utilizatorului
     """
     # Obținem datele utilizatorului din request
     data = request.get_json()
@@ -258,24 +319,40 @@ def create_user():
 @role_required('ADM')
 def update_user(user_id):
     """
-    Endpoint pentru actualizarea unui utilizator (doar pentru administrator)
+    Endpoint pentru actualizarea unui utilizator (doar pentru administrator).
     
-    Request:
-    {
-        "firstName": "Nume",
-        "lastName": "Prenume",
-        "role": "SEC",
-        "password": "parola" (opțional, doar pentru administrator)
-    }
+    Actualizează informațiile unui utilizator existent în sistem. Acest endpoint
+    este accesibil doar pentru utilizatorii cu rol de administrator (ADM).
     
+    Args:
+        user_id (int): ID-ul utilizatorului care va fi actualizat
+    
+    Request Body:
+        {
+            "firstName": "Nume",
+            "lastName": "Prenume",
+            "role": "SEC",
+            "password": "parola" (opțional, doar pentru administrator)
+        }
+    
+    Returns:
+        JSON: Un obiect JSON conținând informații actualizate despre utilizator.
+        
     Response:
-    {
-        "id": 123,
-        "email": "user@usv.ro",
-        "role": "SEC",
-        "firstName": "Nume",
-        "lastName": "Prenume"
-    }
+        {
+            "id": 123,
+            "email": "user@usv.ro",
+            "role": "SEC",
+            "firstName": "Nume",
+            "lastName": "Prenume"
+        }
+    
+    Raises:
+        400: Dacă datele furnizate sunt invalide
+        401: Dacă token-ul JWT lipsește sau este invalid (gestionat de decorator-ul jwt_required)
+        403: Dacă utilizatorul nu are rol de administrator (gestionat de decorator-ul role_required)
+        404: Dacă utilizatorul specificat nu există
+        500: Dacă apare o eroare la actualizarea utilizatorului
     """
     # Obținem datele utilizatorului din request
     data = request.get_json()
@@ -330,12 +407,27 @@ def update_user(user_id):
 @role_required('ADM')
 def delete_user(user_id):
     """
-    Endpoint pentru ștergerea unui utilizator (doar pentru administrator)
+    Endpoint pentru ștergerea unui utilizator (doar pentru administrator).
     
+    Șterge un utilizator existent din sistem. Acest endpoint este accesibil
+    doar pentru utilizatorii cu rol de administrator (ADM).
+    
+    Args:
+        user_id (int): ID-ul utilizatorului care va fi șters
+    
+    Returns:
+        JSON: Un mesaj de confirmare că utilizatorul a fost șters cu succes.
+        
     Response:
-    {
-        "message": "Utilizator șters cu succes"
-    }
+        {
+            "message": "Utilizator șters cu succes"
+        }
+    
+    Raises:
+        401: Dacă token-ul JWT lipsește sau este invalid (gestionat de decorator-ul jwt_required)
+        403: Dacă utilizatorul nu are rol de administrator (gestionat de decorator-ul role_required)
+        404: Dacă utilizatorul specificat nu există
+        500: Dacă apare o eroare la ștergerea utilizatorului
     """
     # Obținem utilizatorul din baza de date
     db_session = get_db_session()

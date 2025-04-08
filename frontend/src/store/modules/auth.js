@@ -66,6 +66,40 @@ const actions = {
     }
   },
   
+  // Autentificare cu email și parolă
+  async loginWithCredentials({ commit }, credentials) {
+    try {
+      commit('SET_LOADING', true)
+      commit('CLEAR_ERROR')
+      
+      // În mod normal, aici ar trebui să facem un apel API către backend
+      // Simulăm un răspuns de succes pentru a permite testarea UI-ului
+      // TODO: Înlocuiți acest cod cu apelul real către API
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Simulăm un utilizator autentificat
+      const user = {
+        id: 1,
+        email: credentials.email,
+        firstName: 'Utilizator',
+        lastName: 'Test',
+        role: 'ADMIN'
+      }
+      
+      const access_token = 'simulated_token_' + Math.random().toString(36).substring(2)
+      
+      commit('SET_TOKEN', access_token)
+      commit('SET_USER', user)
+      
+      return user
+    } catch (error) {
+      commit('SET_ERROR', error.response?.data?.error || 'Email sau parolă incorecte')
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+  
   // Deconectare
   logout({ commit }) {
     commit('SET_TOKEN', null)
