@@ -11,3 +11,6 @@ http://localhost:8080/
 
 # api
 http://localhost:5000/api/docs/#/auth/post_auth_login
+
+#### To do
+# de facut un gitignore pentru src
